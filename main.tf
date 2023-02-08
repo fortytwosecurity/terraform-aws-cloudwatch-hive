@@ -135,6 +135,7 @@ module "alarm_to_hive_lambda" {
     excludeAccountFilter = jsonencode(var.exclude_account_filter)
     company              = var.company
     project              = var.project
+    debug                = var.debug
   }
 
   layers = [
