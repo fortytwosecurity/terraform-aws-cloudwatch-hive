@@ -23,22 +23,16 @@ def hive_rest_call(alert, url, apikey):
     return json.dumps(response.json())
 
 
-def hive_build_sechub_data(accountId, region, event, severityHive, reference,
+def hive_build_alert_data(accountId, region, alarm, severityHive, reference,
                            tag_environment, tag_project, tag_company):
-    finding = event['findings'][0]
-    description = finding['Description'] + "\n\n A Security Hub finding has been detected: \n```json\n" + json.dumps(event, indent=4, sort_keys=True) + "\n```\n"  # noqa: E501
-
-    title = "Security Hub (" + finding['Title'] + ") detected in " + accountId
-    taglist = ["sechub", region, accountId, finding['Severity']['Label'].lower(),  # noqa: E501
+    description = alarm['state']['reason'] + "\n\n A cloudwatch alarm has fired: \n```json\n" + json.dumps(alarm, indent=4, sort_keys=True) + "\n```\n"  # noqa: E501
+    alarmConfiguration = alarm['configuration']
+    title = "Cloudwatch Alarm (" + alarm['alarmName'] + ") detected in " + accountId
+    taglist = ["cloudwatch", region, accountId, alarm['alarmName'].lower(),  # noqa: E501
                tag_environment, tag_project, tag_company]
-    if finding['ProductFields'].get("RuleId"):
-        taglist.append(finding['ProductFields']['RuleId'])
-    if finding['ProductFields'].get("ControlId"):
-        taglist.append(finding['ProductFields']['ControlId'])
-    if finding['ProductFields'].get("ControlId"):
-        taglist.append(finding['ProductFields']['aws/securityhub/ProductName'].replace(" ", ""))  # noqa: E501
-
-    source = "sechub:" + region + ":" + accountId
+    if (alarmConfiguration['metrics'][0]['metricStat']['metric'].get("namespace")):
+       taglist.append(alarmConfiguration['metrics'][0]['metricStat']['metric']['namespace'])
+    source = "cloudwatch:" + region + ":" + accountId
 
     alert = Alert(title=title,
                   tlp=3,
@@ -48,9 +42,6 @@ def hive_build_sechub_data(accountId, region, event, severityHive, reference,
                   source=source,
                   sourceRef=reference,
                   )
-
-    print("Hive alert: ", alert)
-
     return alert
 
 
@@ -67,28 +58,6 @@ def get_hive_secret(boto3, secretarn):
             raise KeyError("%s key is missing from secret JSON" % field)
 
     return secret_dict
-
-
-def update_workflowstatus(boto3, finding):
-    service_client = boto3.client('securityhub')
-    try:
-        response = service_client.batch_update_findings(
-            FindingIdentifiers=[
-                {
-                 'Id': finding['Id'],
-                 'ProductArn': finding['ProductArn']
-                }
-            ],
-            Workflow={
-               'Status': 'NOTIFIED'
-            }
-        )
-        print(response)
-        return response
-    except Exception as e:
-        print(e)
-        print("Updating finding workflow failed, please troubleshoot further")
-        raise
 
 
 def create_issue_for_account(accountId, excludeAccountFilter):
@@ -109,15 +78,14 @@ def lambda_handler(event, context):
         print("event: ", event)
 
     # Get Sechub event details
-    eventDetails = event['detail']
-    finding = eventDetails['findings'][0]
-    findingAccountId = finding["AwsAccountId"]
-    findingRegion = finding["Region"]
+    eventDetail = event['detail']
+    alarmAccountId = event["account"]
+    alarmRegion = event["region"]
 
     reference = event['id']
     severityHive = 1
 
-    if createHiveAlert and create_issue_for_account(findingAccountId, excludeAccountFilter):  # noqa: E501
+    if createHiveAlert and create_issue_for_account(alarmAccountId, excludeAccountFilter):  # noqa: E501
         hiveSecretArn = os.environ['hiveSecretArn']
         tag_company = os.environ['company']
         tag_project = os.environ['project']
@@ -125,11 +93,10 @@ def lambda_handler(event, context):
         hiveSecretData = get_hive_secret(boto3, hiveSecretArn)
         hiveUrl = hiveSecretData['url']
         hiveApiKey = hiveSecretData['apikey']
-        json_data = hive_build_sechub_data(findingAccountId, findingRegion, eventDetails,  # noqa: E501
+        json_data = hive_build_alert_data(alarmAccountId, alarmRegion, eventDetail,  # noqa: E501
                                            severityHive, reference,
                                            tag_environment, tag_project,
                                            tag_company)
         json_response = hive_rest_call(json_data, hiveUrl, hiveApiKey)
         print("Created Hive alert ", json_response)
-        response = update_workflowstatus(boto3, finding)
-        print("Updated sechub finding workflow: ", response)
+
