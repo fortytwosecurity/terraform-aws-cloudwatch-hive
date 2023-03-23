@@ -69,7 +69,6 @@ def create_issue_for_account(accountId, excludeAccountFilter):
 
 def lambda_handler(event, context):
     debug = False
-    createHiveAlert = True
     createHiveAlert = json.loads(os.environ['createHiveAlert'].lower())
     excludeAccountFilter = os.environ['excludeAccountFilter']
     debug = os.environ['debug']
