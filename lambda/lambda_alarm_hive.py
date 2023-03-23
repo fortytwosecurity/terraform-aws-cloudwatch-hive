@@ -72,7 +72,6 @@ def lambda_handler(event, context):
     createHiveAlert = json.loads(os.environ['createHiveAlert'].lower())
     excludeAccountFilter = os.environ['excludeAccountFilter']
     debug = os.environ['debug']
-    createHiveAlert = True
 
     if (debug): 
         print("event: ", event)
@@ -99,4 +98,5 @@ def lambda_handler(event, context):
                                            tag_company)
         json_response = hive_rest_call(json_data, hiveUrl, hiveApiKey)
         print("Created Hive alert ", json_response)
+
 
