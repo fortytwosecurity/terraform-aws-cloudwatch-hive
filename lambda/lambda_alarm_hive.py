@@ -66,7 +66,7 @@ def create_issue_for_account(accountId, excludeAccountFilter):
     else:
         return True
 
-def create_issue_for_alarm(alarmtName, excludeAlarmFilter):
+def create_issue_for_alarm(alarmName, excludeAlarmFilter):
     if alarmName in excludeAlarmFilter:
         return False
     else:
@@ -86,7 +86,7 @@ def lambda_handler(event, context):
     eventDetail = event['detail']
     alarmAccountId = event["account"]
     alarmRegion = event["region"]
-    alarmName = eventDetail["alarmName"]
+    alarmName = eventDetail['alarmName']
     reference = event['id']
     severityHive = 1
 
