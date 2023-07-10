@@ -76,6 +76,7 @@ def lambda_handler(event, context):
     debug = False
     createHiveAlert = json.loads(os.environ['createHiveAlert'].lower())
     excludeAccountFilter = os.environ['excludeAccountFilter']
+    excludeAlarmFilter = os.environ['excludeAlarmFilter']
     debug = os.environ['debug']
 
     if (debug): 
