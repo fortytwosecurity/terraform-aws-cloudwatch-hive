@@ -86,7 +86,7 @@ def lambda_handler(event, context):
     eventDetail = event['detail']
     alarmAccountId = event["account"]
     alarmRegion = event["region"]
-    alarmName = event["alarmName"]
+    alarmName = eventDetail["alarmName"]
     reference = event['id']
     severityHive = 1
 
