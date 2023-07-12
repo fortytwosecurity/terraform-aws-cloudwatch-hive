@@ -54,6 +54,12 @@ variable "exclude_account_filter" {
   default     = []
 }
 
+variable "exclude_alarm_filter" {
+  type        = list(string)
+  description = "A list of alarm names for which no alerts will be created"
+  default     = []
+}
+
 variable "tags" {
   type        = map(string)
   description = "Map of tags"

@@ -133,6 +133,7 @@ module "alarm_to_hive_lambda" {
     createHiveAlert      = var.create_hive_alert
     environment          = var.environment
     excludeAccountFilter = jsonencode(var.exclude_account_filter)
+    excludeAlarmFilter   = jsonencode(var.exclude_alarm_filter)
     company              = var.company
     project              = var.project
     debug                = var.debug

@@ -66,11 +66,17 @@ def create_issue_for_account(accountId, excludeAccountFilter):
     else:
         return True
 
+def create_issue_for_alarm(alarmName, excludeAlarmFilter):
+    if alarmName in excludeAlarmFilter:
+        return False
+    else:
+        return True
 
 def lambda_handler(event, context):
     debug = False
     createHiveAlert = json.loads(os.environ['createHiveAlert'].lower())
     excludeAccountFilter = os.environ['excludeAccountFilter']
+    excludeAlarmFilter = os.environ['excludeAlarmFilter']
     debug = os.environ['debug']
 
     if (debug): 
@@ -80,23 +86,24 @@ def lambda_handler(event, context):
     eventDetail = event['detail']
     alarmAccountId = event["account"]
     alarmRegion = event["region"]
-
+    alarmName = eventDetail['alarmName']
     reference = event['id']
     severityHive = 1
 
     if createHiveAlert and create_issue_for_account(alarmAccountId, excludeAccountFilter):  # noqa: E501
-        hiveSecretArn = os.environ['hiveSecretArn']
-        tag_company = os.environ['company']
-        tag_project = os.environ['project']
-        tag_environment = os.environ['environment']
-        hiveSecretData = get_hive_secret(boto3, hiveSecretArn)
-        hiveUrl = hiveSecretData['url']
-        hiveApiKey = hiveSecretData['apikey']
-        json_data = hive_build_alert_data(alarmAccountId, alarmRegion, eventDetail,  # noqa: E501
-                                           severityHive, reference,
-                                           tag_environment, tag_project,
-                                           tag_company)
-        json_response = hive_rest_call(json_data, hiveUrl, hiveApiKey)
-        print("Created Hive alert ", json_response)
+        if create_issue_for_alarm(alarmName,excludeAlarmFilter):
+            hiveSecretArn = os.environ['hiveSecretArn']
+            tag_company = os.environ['company']
+            tag_project = os.environ['project']
+            tag_environment = os.environ['environment']
+            hiveSecretData = get_hive_secret(boto3, hiveSecretArn)
+            hiveUrl = hiveSecretData['url']
+            hiveApiKey = hiveSecretData['apikey']
+            json_data = hive_build_alert_data(alarmAccountId, alarmRegion, eventDetail,  # noqa: E501
+                                            severityHive, reference,
+                                            tag_environment, tag_project,
+                                            tag_company)
+            json_response = hive_rest_call(json_data, hiveUrl, hiveApiKey)
+            print("Created Hive alert ", json_response)
 
 
