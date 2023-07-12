@@ -16,7 +16,7 @@ module "hive_alarm_cloudwatch_event" {
 
 module "hive_alarm_iam_assumable_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-assumable-role"
-  version = "4.10.1"
+  version = "5.27.0"
 
   trusted_role_services = [
     "lambda.amazonaws.com"
@@ -79,7 +79,7 @@ data "aws_iam_policy_document" "hive_alarm_iam_policy" {
 
 module "hive_alarm_iam_policy" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
-  version = "4.10.1"
+  version = "5.27.0"
 
   name        = "SechubToHiveFindingsLambda-Policy-${random_string.random.id}"
   path        = "/"
@@ -103,7 +103,7 @@ data "archive_file" "alarm_to_hive_lambda_zip" {
 
 module "thehive4py_layer" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "2.7.0"
+  version = "5.2.0"
 
   create_layer = true
 
@@ -118,7 +118,7 @@ module "thehive4py_layer" {
 
 module "alarm_to_hive_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "2.7.0"
+  version = "5.2.0"
 
   function_name  = "alarm-to-hive"
   description    = "function to send cloudwatch alarms to the hive"
@@ -148,3 +148,4 @@ module "alarm_to_hive_lambda" {
   number_of_policies = 1
   tags               = var.tags
 }
+
